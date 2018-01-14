@@ -51,6 +51,9 @@ function objToArray(obj){
     });
   }
 
+let searching = false
+let total = false
+
 // login({ appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8')) }, (err, api) => {
 login({ email: username, password: password}, (err, api) => {
  
@@ -72,6 +75,107 @@ login({ email: username, password: password}, (err, api) => {
             let uptime = moment.duration(moment().diff(start));
 
             api.sendMessage(`[ *CryptPay* ] I have been alive for ${uptime.toISOString()}.`, message.threadID)
+            return
+        }
+
+        let s = message.body.substring(0,6);
+        let o = message.body.substring(0,4);
+        let a = message.body.substring(7,12);
+        let b = message.body.substring(5,10);
+        if ((s == "/split")) { 
+            api.getThreadInfoGraphQL(message.threadID, (err, info) => {
+                if (a == ""){
+                    if(total) {
+                        let dm = info['participantIDs'];
+                        let participants = dm.length;
+                        console.log(participants);
+                        let value = total
+                        let splitval = value / participants;
+                        let sSplitVal = splitval.toFixed(2).toString();
+                        let msg = "*[CryptPay]* Please send me $";
+                        player.play('sounds/KeypressReturn.mp3')
+
+                        if (participants==2) {
+                            api.sendMessage(msg + sSplitVal, message.threadID);
+                        } else {
+                        api.sendMessage(msg + sSplitVal + " each", message.threadID);
+                        }
+                    }
+                    return
+                }
+                let dm = info['participantIDs'];
+                let participants = dm.length;
+                console.log(participants);
+                let value = parseFloat(a,10);
+                let splitval = value / participants;
+                let sSplitVal = splitval.toFixed(2).toString();
+                player.play('sounds/KeypressReturn.mp3')
+
+                let msg = "*[CryptPay]* Please send me $";
+                if (participants==2) {
+                    api.sendMessage(msg + sSplitVal, message.threadID);
+                } else {
+                api.sendMessage(msg + sSplitVal + " each", message.threadID);
+                }
+                return
+            })
+        }
+
+        if(searching && message.attachments.length !== 0 && message.senderID == api.getCurrentUserID()) {
+            let imageURL = message.attachments[0].url
+            const formData = {
+                url: imageURL,
+                refresh: false,
+                incognito: false,
+                ipAddress: "32.4.2.223",
+                language: "en"
+              };
+
+              player.play('sounds/Complete.mp3')
+                    api.sendMessage("*[CryptPay]* Analyzing receipt 🤖", message.threadID)
+            
+            request.post({
+            url: 'https://api.taggun.io/api/receipt/v1/verbose/url',
+            headers: { apikey: 'eef43230f8f011e7ab51516b33cba1b5' },
+            body:JSON.stringify(formData)
+            }, (err, httpResponse, body) => {
+            if (err) {
+                return console.error('upload failed:', err);
+            }
+            var jsonString = JSON.parse(body);
+            if(jsonString.statusCode == 418) {
+                player.play('sounds/Error.mp3')
+                    api.sendMessage("*[CryptPay]* Error! Image uploaded was not a receipt :(", message.threadID)
+            
+                return
+            }
+            let fullString = ""
+            fullString += 'Upload successful!\n';
+            fullString += 'Total amount(including tax) is: $' + jsonString.totalAmount.data + "\n";
+            total = Number(jsonString.totalAmount.data)
+            if (jsonString.date.confidenceLevel > 0.2){
+                fullString += 'This transaction happened on:' + jsonString.date.text +'\n\n';
+            }
+ 
+            if (jsonString.lineAmounts.length > 0){
+                
+                for (var i = 0; i < jsonString.lineAmounts.length; i++){
+                    fullString += jsonString.lineAmounts[i].description + " $" + jsonString.lineAmounts[i].data + "\n"
+                }
+                
+            }
+            player.play('sounds/TransactionSent.mp3')
+                    api.sendMessage("*[CryptPay]* " + fullString, message.threadID)
+                    return
+            });
+            
+            return
+        }
+
+        if(message.body == "/receipt" && message.senderID == api.getCurrentUserID()) {
+            searching = true
+            player.play('sounds/KeypressReturn.mp3')
+            api.sendMessage(`*[CryptPay]* Waiting for picture upload...`, message.threadID)
             return
         }
 
@@ -126,16 +230,23 @@ login({ email: username, password: password}, (err, api) => {
                 // api.sendMessage(serializedTx.toString('hex'), message.threadID)
                 
                 console.log(serializedTx.toString('hex'))
-            Complete
+            
                 let transaction = web3.eth.sendSignedTransaction('0x' + serializedTx.toString('hex'))
                 transaction.on('transactionHash', (hash) => {
                     player.play('sounds/TransactionSent.mp3')
                     api.sendMessage("*[CryptPay]* Transaction sent! ID: " + hash + "\n\nYou can view your transaction at https://etherscan.io/tx/" + hash + "\n*(This will take 30+ seconds before it appears)*", message.threadID);
                 }).on('receipt', (msg) => {api.sendMessage("*[CryptPay]* Transaction fully sent. View it at https://etherscan.io/tx/" + hash, message.threadID)})
                 .on('error', (msg) => {
+                    if (msg.message == "Transaction was not mined within 50 blocks, please make sure your transaction was properly send. Be aware that it might still be mined!") {
+                        return
+                    }
                     player.play('sounds/Error.mp3')
                     api.sendMessage("*[CryptPay]*\n`" + msg + "`", message.threadID)}
-                )
+                ).on('confirmation', (num, rec) => {
+                    if (Number(num) == 1) {
+                        api.sendMessage("*[CryptPay]* First confirmation sent!\n\nYou can view your transaction at https://etherscan.io/tx/" + hash + "\n", message.threadID);
+                    }
+                })
 
             })
         }

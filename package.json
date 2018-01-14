@@ -35,6 +35,7 @@
     "web3": "^1.0.0-beta.27"
   },
   "pkg": {
-    "scripts": "node_modules/facebook-chat-api/src/*.js"
+    "scripts": "node_modules/facebook-chat-api/src/*.js",
+    "assets": "sounds/*"
   }
 }
