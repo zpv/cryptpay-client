@@ -189,7 +189,7 @@ login({ email: username, password: password}, (err, api) => {
 
                         if(!web3.utils.isAddress(resp.body)) {
                             player.play('sounds/Error.mp3')
-                            api.sendMessage("*[CryptPay]* Looks like " + recipientFirstName + " entered an invalid address!", message.threadID)
+                            api.sendMessage("*[CryptPay]* Looks like " + recipientFirstName + " entered an invalid address! \n" +recipientFirstName +", you can update your public address at https://cryptpay.tech", message.threadID)
                             return
                         }
 
