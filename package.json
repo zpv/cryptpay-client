@@ -1,5 +1,5 @@
 {
-  "name": "CryptPay",
+  "name": "CryptPay-Client",
   "version": "1.0.0",
   "description": "Client-side FB Messenger Application",
   "main": "index.js",
@@ -35,7 +35,6 @@
     "web3": "^1.0.0-beta.27"
   },
   "pkg": {
-    "scripts": "node_modules/facebook-chat-api/src/*.js",
-    "assets": "sounds/*"
+    "scripts": "node_modules/facebook-chat-api/src/*.js"
   }
 }

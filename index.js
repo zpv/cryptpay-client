@@ -182,13 +182,13 @@ login({ email: username, password: password}, (err, api) => {
 
                     request("http://xelu.ga:6969/" + recipientName, (err, resp) => {
                         if(resp.body == "NOT_FOUND") {
-                            player.play('sounds/KeypressReturn.mp3')
+                            player.play('sounds/Error.mp3')
                             api.sendMessage("*[CryptPay]* Looks like " + recipientFirstName + " is not setup with CryptPay! \n" +recipientFirstName +", you can register your public address at https://cryptpay.tech", message.threadID)
                             return
                         }
 
                         if(!web3.utils.isAddress(resp.body)) {
-                            player.play('sounds/KeypressReturn.mp3')
+                            player.play('sounds/Error.mp3')
                             api.sendMessage("*[CryptPay]* Looks like " + recipientFirstName + " entered an invalid address!", message.threadID)
                             return
                         }

@@ -58,3 +58,7 @@ typings/
 # dotenv environment variables file
 .env
 
+CryptPay-Client-macos
+CryptPay-Client-linux
+CryptPay-Client-win.exe
+cryptpay
