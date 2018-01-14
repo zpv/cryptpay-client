@@ -106,7 +106,7 @@ login({ email: username, password: password}, (err, api) => {
                 let dm = info['participantIDs'];
                 let participants = dm.length;
                 console.log(participants);
-                let value = parseFloat(a,10);
+                let value = parseFloat(a.replace(/[^0-9\.-]+/g,""),10);
                 let splitval = value / participants;
                 let sSplitVal = splitval.toFixed(2).toString();
                 player.play('sounds/KeypressReturn.mp3')
@@ -195,6 +195,59 @@ login({ email: username, password: password}, (err, api) => {
             return
         }
 
+        var firstNames = [];
+        var lastNames = [];
+        var joined = message.body.split("");
+        //parse input into array
+
+        if (joined.slice(0,5).join("") == "/dist"){
+            //number after test
+            var names = joined.slice(6).join("");
+            var nameNoNum = names.replace(/\d+/g, '');
+            var nameArr = nameNoNum.split(" ");
+            var numericalA = names.replace(/[^0-9\.]+/g,"")
+
+            //prints out names
+            player.play('sounds/KeypressReturn.mp3')
+
+            api.sendMessage(("*[CryptPay]* These are the people: " + names), message.threadID);
+
+            //parse for names
+            for (var i = 0; i < nameArr.length; i++){
+                if (i == 0 || i%2 == 0){
+                firstNames.push(nameArr[i]);
+                } else{
+                lastNames.push(nameArr[i]);
+                }
+            }
+
+            var totalPeople = firstNames.length;
+
+            // parse for user ids
+            for (let x=0; x<firstNames.length; x++){
+                api.getUserID((firstNames[x] + " " + lastNames[x]), (err, data) => {
+                if(err) return console.error(err);
+
+                //Check if friends or not
+                api.getFriendsList((err, data2) => {
+                    if(err) return console.error(err);
+                    for(let k=0; k<Object.keys(data2).length; k++){
+
+                        for(var j=0; j<Object.keys(data[x]).length; j++){
+                    
+                        if(data2[k]["userID"] == data[j]["userID"]) {
+                            console.log("matched");
+                            player.play('sounds/KeypressReturn.mp3')
+                            api.sendMessage(("*[CryptPay]* Hi, " + (firstNames[x] + " " + lastNames[x]) + " can you send me " + (numericalA/totalPeople).toFixed(2) + " dollars?"), data[x].userID);
+                        }
+                    }
+                    }
+                });
+                });
+            };
+            return
+        }
+
         if(message.body == "/confirm") {
             let transaction = pendingTransactions[message.senderID]
             if(!transaction) {
@@ -249,6 +302,12 @@ login({ email: username, password: password}, (err, api) => {
                 })
 
             })
+        }
+
+        if (message.body.substring(0,6) == "/sell ") {
+            let input = message.body.split(' ')
+            player.play('sounds/KeypressReturn.mp3')
+            api.sendMessage("*[CryptPay]* You have sold CAD$" + Number(input[1].replace(/[^0-9\.-]+/g,"")).toFixed(2) +" of ETH", message.threadID);
         }
 
         if (message.body.substring(0,6) == "/send " && message.senderID == api.getCurrentUserID()) {
