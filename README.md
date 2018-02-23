@@ -1,4 +1,4 @@
-# cryptpay-client
+# CryptPay
 Winning nwHacks 2018 Project. Enables payments on FB Messenger through transactions on the Ethereum blockchain. A secure locally hosted chatbot/wallet hybrid.
 
 ## Inspiration
