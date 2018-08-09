@@ -1,3 +1,7 @@
+/*
+    Built within 24-hours.
+*/
+
 'use strict';
 
 const login = require("facebook-chat-api");
